@@ -1,0 +1,61 @@
+#!/usr/bin/env ruby
+
+require 'prawn'
+require 'combine_pdf'
+require 'optparse'
+require 'fileutils'
+
+options = {}
+options[:nombre] = 'reporte.pdf'
+
+OptionParser.new do |opts|
+
+  opts.banner = "Usage: #{$0} [OPTIONS]"
+
+  opts.on('-d', '--directorio [TEXTO]', 'Directorio donde se encuentran los pdfs que hay que mezclar.') do |value|
+    options[:directorio] = value
+  end
+
+  opts.on('-n', '--nombre [TEXTO]', 'Nombre del archivo que sera generado.') do |value|
+    options[:nombre] = value
+  end
+
+end.parse!
+
+required_options = [:directorio, :nombre]
+required_options.each do |option|
+  unless options[option]
+    $stderr.puts "Can not run #{option.to_s} was not given."
+    exit 1
+  end
+end
+
+unless File.exists?(options[:directorio])
+  $stderr.puts "Directorio no encontrado: #{options[:directorio]}"
+  exit 1 
+end
+
+directories = Dir.glob("#{options[:directorio]}/*/*")
+
+config = {
+  :skip_page_creation => false
+}
+
+directories.each do |dir|
+
+  # TODO: might need to thing about diff ext name casing for case
+  # insensitive file systems like windows/unix.
+  target = "#{dir}/#{options[:nombre]}"
+  FileUtils.rm_f(target)
+  puts "Processando: #{dir}"
+  glob = Dir.glob("#{dir}/*.pdf")
+  pdfs = []
+  glob.each { |pdf| pdfs.push(pdf) }
+
+  pdf = CombinePDF.new
+  pdfs.sort.each do |doc|
+    pdf << CombinePDF.load(doc)
+  end
+  pdf.save(target)
+
+end

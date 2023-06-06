@@ -1,0 +1,20 @@
+#!/usr/bin/env ruby
+
+require 'prawn'
+require 'fileutils'
+
+days = ('01'..'29').to_a
+directory = "directorio/#{(days.shuffle.first)}-11-22/"
+subdir = "CJ #{(1..900).to_a.shuffle.first} 2022"
+path = "#{directory}/#{subdir}/"
+
+FileUtils.mkdir_p(path)
+
+(1..10).to_a.shuffle.first.times do |n|
+  filepath = "#{path}#{n}.pdf"
+  puts "\tgenerando: #{filepath}" 
+  Prawn::Document.generate(filepath) do
+    text "archivo #{n}.pdf"
+  end
+end
+
